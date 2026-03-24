@@ -57,9 +57,14 @@ export default function ManageEventsPage() {
     try {
       const res = await fetch(`/api/events?${params}`);
       const data = await res.json();
-      setEvents(data.events ?? []);
-    } catch {
-      setError("Failed to load events.");
+      if (!res.ok) {
+        setError(data.error ?? `API error ${res.status}`);
+        setEvents([]);
+      } else {
+        setEvents(data.events ?? []);
+      }
+    } catch (err) {
+      setError(`Failed to load events: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSelected(new Set());
       setLoading(false);
@@ -145,8 +150,8 @@ export default function ManageEventsPage() {
             <span className="text-sm font-semibold text-brand-orange">{selected.size} selected</span>
             {selected.size === 1 && (
               <>
-                <Button variant="secondary" onClick={() => setEditEvent(events.find((e) => e.id === [...selected][0])!)}>✏️ Edit</Button>
-                <Button variant="secondary" onClick={() => setDupEvent(events.find((e) => e.id === [...selected][0])!)}>📋 Duplicate</Button>
+               <Button variant="secondary" onClick={() => setEditEvent(events.find((e) => e.id === Array.from(selected)[0])!)}>✏️ Edit</Button>
+                <Button variant="secondary" onClick={() => setDupEvent(events.find((e) => e.id === Array.from(selected)[0])!)}>📋 Duplicate</Button>
               </>
             )}
             {selected.size > 1 && (
@@ -239,7 +244,7 @@ export default function ManageEventsPage() {
       {/* Bulk Edit Modal */}
       <BulkEditModal
         open={bulkEditOpen}
-        eventIds={[...selected]}
+        eventIds={Array.from(selected)}
         settings={settings}
         onClose={() => setBulkEditOpen(false)}
         onSaved={() => { setBulkEditOpen(false); fetchEvents(); setSuccess(`${selected.size} event(s) updated.`); }}

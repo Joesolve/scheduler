@@ -7,17 +7,17 @@ async function main() {
   console.log("🌱 Seeding database…");
 
   // ── Admin user ──────────────────────────────────────────────────────────────
-  const existing = await prisma.user.findUnique({ where: { email: "admin@example.com" } });
+  const existing = await prisma.user.findUnique({ where: { email: "sues@eqstrategist.com" } });
   if (!existing) {
     await prisma.user.create({
       data: {
-        email: "admin@example.com",
+        email: "sues@eqstrategist.com",
         role: "admin",
         active: true,
-        password: await bcrypt.hash("ChangeMe123!", 12),
+        password: await bcrypt.hash("Welcome123", 12),
       },
     });
-    console.log("✅ Created admin user: admin@example.com / ChangeMe123!");
+    console.log("✅ Created admin user: sues@eqstrategist.com / Welcome123");
   } else {
     console.log("ℹ️  Admin user already exists.");
   }
@@ -95,8 +95,8 @@ async function main() {
   console.log("✅ Seeded notifications.");
 
   console.log("\n🎉 Done! Login at http://localhost:3000 with:");
-  console.log("   Email:    admin@example.com");
-  console.log("   Password: ChangeMe123!");
+  console.log("   Email:    sues@eqstrategist.com");
+  console.log("   Password: Welcome123");
   console.log("\n⚠️  Change the password immediately after first login.\n");
 }
 

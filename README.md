@@ -37,7 +37,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open http://localhost:3000 — login with `admin@example.com` / `ChangeMe123!`
+Open http://localhost:3000 — login with `sues@eqstrategist.com` / `Welcome123`
 
 > **Change the password immediately** in Settings → Users & Roles → Reset Password.
 

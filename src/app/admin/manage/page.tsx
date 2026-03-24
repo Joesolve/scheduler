@@ -57,9 +57,14 @@ export default function ManageEventsPage() {
     try {
       const res = await fetch(`/api/events?${params}`);
       const data = await res.json();
-      setEvents(data.events ?? []);
-    } catch {
-      setError("Failed to load events.");
+      if (!res.ok) {
+        setError(data.error ?? `API error ${res.status}`);
+        setEvents([]);
+      } else {
+        setEvents(data.events ?? []);
+      }
+    } catch (err) {
+      setError(`Failed to load events: ${err instanceof Error ? err.message : String(err)}`);
     } finally {
       setSelected(new Set());
       setLoading(false);

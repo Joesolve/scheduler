@@ -145,8 +145,8 @@ export default function ManageEventsPage() {
             <span className="text-sm font-semibold text-brand-orange">{selected.size} selected</span>
             {selected.size === 1 && (
               <>
-                <Button variant="secondary" onClick={() => setEditEvent(events.find((e) => e.id === [...selected][0])!)}>✏️ Edit</Button>
-                <Button variant="secondary" onClick={() => setDupEvent(events.find((e) => e.id === [...selected][0])!)}>📋 Duplicate</Button>
+               <Button variant="secondary" onClick={() => setEditEvent(events.find((e) => e.id === Array.from(selected)[0])!)}>✏️ Edit</Button>
+                <Button variant="secondary" onClick={() => setDupEvent(events.find((e) => e.id === Array.from(selected)[0])!)}>📋 Duplicate</Button>
               </>
             )}
             {selected.size > 1 && (
@@ -239,7 +239,7 @@ export default function ManageEventsPage() {
       {/* Bulk Edit Modal */}
       <BulkEditModal
         open={bulkEditOpen}
-        eventIds={[...selected]}
+        eventIds={Array.from(selected)}
         settings={settings}
         onClose={() => setBulkEditOpen(false)}
         onSaved={() => { setBulkEditOpen(false); fetchEvents(); setSuccess(`${selected.size} event(s) updated.`); }}

@@ -1,0 +1,89 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid())
+  email       String   @unique
+  role        String   // "admin" | "trainer" | "view_only"
+  trainerName String?
+  active      Boolean  @default(true)
+  password    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Event {
+  id              String   @id @default(cuid())
+  title           String
+  date            DateTime
+  type            String   // W, C, M
+  status          String
+  source          String
+  client          String
+  description     String
+  trainerCalendar String   // comma-separated trainer names
+  medium          String
+  location        String
+  billing         String?
+  invoiced        String   @default("No")
+  notes           String?
+  isMarked        Boolean  @default(false)
+  markedFor       String?  // "All" or comma-separated trainer names
+  actionType      String?
+  modifiedBy      String?
+  dateModified    DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Trainer {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  color  String
+  active Boolean @default(true)
+}
+
+model ListItem {
+  id       String  @id @default(cuid())
+  category String  // Locations | Sources | Statuses | Mediums | Types
+  value    String
+  active   Boolean @default(true)
+  order    Int     @default(0)
+
+  @@unique([category, value])
+}
+
+model AppRule {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model AppDefault {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model Notification {
+  id    String @id @default(cuid())
+  key   String @unique
+  value String
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  timestamp DateTime @default(now())
+  user      String
+  action    String
+  details   String?
+}

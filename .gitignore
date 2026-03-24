@@ -1,0 +1,37 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Database (don't commit the DB file)
+*.db
+*.db-shm
+*.db-wal
+prisma/dev.db
+prisma/*.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+dist/
+
+# Backups (server-side only)
+backups/
+
+# Lock files (keep package-lock or yarn.lock, not both)
+# Uncomment whichever you don't use:
+# yarn.lock
+# package-lock.json

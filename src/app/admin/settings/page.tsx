@@ -279,24 +279,91 @@ function RulesTab() {
 
 // ─── Backup Tab ───────────────────────────────────────────────────────────────
 function BackupTab() {
+  const [file, setFile] = useState<File | null>(null);
+  const [mode, setMode] = useState<"append" | "replace">("append");
+  const [importing, setImporting] = useState(false);
+  const [result, setResult] = useState<{ created: number; skipped: number; sheet: string } | null>(null);
+  const [error, setError] = useState("");
+
+  async function handleImport() {
+    if (!file) return;
+    setError("");
+    setResult(null);
+    setImporting(true);
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("mode", mode);
+      const res = await fetch("/api/events/import", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? "Import failed.");
+      else setResult({ created: data.created, skipped: data.skipped, sheet: data.sheet });
+    } catch {
+      setError("Upload failed. Check your connection and try again.");
+    } finally {
+      setImporting(false);
+    }
+  }
+
   return (
-    <div className="max-w-md space-y-6">
+    <div className="max-w-lg space-y-6">
       <h2 className="text-lg font-semibold">File / Backup</h2>
+
+      {/* Export */}
+      <Card className="p-5 space-y-2">
+        <h3 className="text-sm font-semibold text-slate-700">Export Data</h3>
+        <p className="text-xs text-slate-500">Download all events as an Excel file.</p>
+        <a href="/api/events/export" className="inline-block mt-1">
+          <Button variant="secondary">⬇️ Download All Events (Excel)</Button>
+        </a>
+      </Card>
+
+      {/* Import */}
       <Card className="p-5 space-y-4">
+        <h3 className="text-sm font-semibold text-slate-700">Import Events from Excel</h3>
+        <p className="text-xs text-slate-500">
+          Upload your <code className="bg-slate-100 px-1 rounded">.xlsx</code> file. Events are read from the
+          &ldquo;Events&rdquo; sheet (or the first sheet if none named Events). Required column: <strong>Date</strong>.
+        </p>
+
+        {error && <Alert type="error">{error}</Alert>}
+        {result && (
+          <Alert type="success">
+            Imported from sheet &ldquo;{result.sheet}&rdquo;: <strong>{result.created}</strong> events created
+            {result.skipped > 0 && `, ${result.skipped} rows skipped`}.
+          </Alert>
+        )}
+
         <div>
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">Export Data</h3>
-          <p className="text-xs text-slate-500 mb-3">Download all events as an Excel file.</p>
-          <a href="/api/events/export" className="inline-block">
-            <Button variant="secondary">⬇️ Download All Events (Excel)</Button>
-          </a>
+          <label className="block text-xs font-medium text-slate-600 mb-1">Excel File (.xlsx / .xls)</label>
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={(e) => { setFile(e.target.files?.[0] ?? null); setResult(null); setError(""); }}
+            className="block w-full text-sm text-slate-600 file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:text-xs file:font-medium file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200 cursor-pointer"
+          />
         </div>
-        <div className="border-t border-slate-100 pt-4">
-          <h3 className="text-sm font-semibold text-slate-700 mb-2">Database</h3>
-          <p className="text-xs text-slate-500">
-            The application now uses a SQLite database (<code className="bg-slate-100 px-1 rounded">dev.db</code>)
-            instead of Excel. Back up this file periodically via your server's file system or a deployment backup tool.
-          </p>
+
+        <div>
+          <label className="block text-xs font-medium text-slate-600 mb-2">Import Mode</label>
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input type="radio" name="importMode" value="append" checked={mode === "append"} onChange={() => setMode("append")} className="text-brand-orange" />
+              Append — add to existing events
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
+              <input type="radio" name="importMode" value="replace" checked={mode === "replace"} onChange={() => setMode("replace")} className="text-brand-orange" />
+              Replace — delete all, then import
+            </label>
+          </div>
+          {mode === "replace" && (
+            <p className="text-xs text-red-500 mt-1">⚠️ This will permanently delete all existing events before importing.</p>
+          )}
         </div>
+
+        <Button onClick={handleImport} loading={importing} disabled={!file}>
+          ⬆️ Import Events
+        </Button>
       </Card>
     </div>
   );

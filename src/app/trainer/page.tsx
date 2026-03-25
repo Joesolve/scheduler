@@ -114,7 +114,7 @@ export default function TrainerPage() {
         ))}
       </div>
 
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         {tab === "calendar" && (
           <div className="space-y-4">
             {/* Controls */}

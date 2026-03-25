@@ -54,7 +54,7 @@ export default function AdminCalendarPage() {
   return (
     <div>
       <PageHeader title="📅 Calendar View" />
-      <div className="p-8 space-y-4">
+      <div className="p-4 md:p-8 space-y-4">
         {fetchError && <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-600">{fetchError}</div>}
         {/* Controls */}
         <div className="flex gap-4 items-end">

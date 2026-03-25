@@ -85,7 +85,7 @@ export default function ViewerPage() {
         ))}
       </div>
 
-      <div className="p-8 space-y-4">
+      <div className="p-4 md:p-8 space-y-4">
         {tab === "calendar" && (
           <>
             <div className="flex gap-4 items-end">

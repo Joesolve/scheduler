@@ -118,13 +118,13 @@ export default function ManageEventsPage() {
     <div>
       <PageHeader title="🔍 Manage Events" subtitle={`${events.length} event(s) found`} />
 
-      <div className="p-8 space-y-6">
+      <div className="p-4 md:p-8 space-y-4 md:space-y-6">
         {error && <Alert type="error">{error}</Alert>}
         {success && <Alert type="success">{success}</Alert>}
 
         {/* Filters */}
         <Card className="p-4">
-          <div className="grid grid-cols-5 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
             <Select label="Trainer" value={filters.trainer} onChange={(e) => setFilters((f) => ({ ...f, trainer: e.target.value }))} options={opts(trainerNames)} />
             <Select label="Status" value={filters.status} onChange={(e) => setFilters((f) => ({ ...f, status: e.target.value }))} options={opts(["All", ...(lists.Statuses ?? [])])} />
             <Select label="Source" value={filters.source} onChange={(e) => setFilters((f) => ({ ...f, source: e.target.value }))} options={opts(["All", ...(lists.Sources ?? [])])} />
@@ -164,7 +164,8 @@ export default function ManageEventsPage() {
 
         {/* Table */}
         <Card className="overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full text-sm min-w-[640px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="w-10 px-4 py-3">
@@ -216,6 +217,7 @@ export default function ManageEventsPage() {
               ))}
             </tbody>
           </table>
+          </div>
 
           {/* Download */}
           {events.length > 0 && (

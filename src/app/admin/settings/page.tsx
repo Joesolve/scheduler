@@ -23,9 +23,26 @@ export default function SettingsPage() {
   return (
     <div>
       <PageHeader title="⚙️ Settings" subtitle="Admin only" />
-      <div className="flex">
-        {/* Side tabs */}
-        <nav className="w-52 shrink-0 border-r border-slate-200 bg-white min-h-screen py-4">
+      {/* Mobile: horizontal scrollable tabs */}
+      <div className="md:hidden border-b border-slate-200 bg-white overflow-x-auto">
+        <div className="flex min-w-max px-2 py-1">
+          {TABS.map((t) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={`px-3 py-2 text-xs font-medium whitespace-nowrap transition-colors border-b-2 ${
+                tab === t.id ? "border-brand-orange text-brand-orange" : "border-transparent text-slate-600 hover:text-slate-900"
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="flex flex-1">
+        {/* Desktop: side tabs */}
+        <nav className="hidden md:block w-52 shrink-0 border-r border-slate-200 bg-white min-h-screen py-4">
           {TABS.map((t) => (
             <button
               key={t.id}
@@ -40,7 +57,7 @@ export default function SettingsPage() {
         </nav>
 
         {/* Tab content */}
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-4 md:p-8 overflow-y-auto min-w-0">
           {tab === "users"         && <UsersTab />}
           {tab === "trainers"      && <TrainersTab />}
           {tab === "lists"         && <ListsTab />}

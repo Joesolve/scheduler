@@ -70,7 +70,7 @@ export default function MarkDatesPage() {
   return (
     <div>
       <PageHeader title="🚫 Mark Dates" subtitle="Block dates for all trainers or specific trainer(s)" />
-      <div className="p-8">
+      <div className="p-4 md:p-8">
         <div className="grid grid-cols-2 gap-8">
           {/* Form */}
           <div>

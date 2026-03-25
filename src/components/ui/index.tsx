@@ -276,8 +276,8 @@ export function Alert({ type, children }: { type: "error" | "success" | "warning
 
 export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
-    <div className="px-8 py-6 border-b border-slate-200 bg-white">
-      <h1 className="text-2xl font-semibold text-slate-900">{title}</h1>
+    <div className="px-4 md:px-8 py-4 md:py-6 border-b border-slate-200 bg-white">
+      <h1 className="text-xl md:text-2xl font-semibold text-slate-900">{title}</h1>
       {subtitle && <p className="text-sm text-slate-500 mt-0.5">{subtitle}</p>}
     </div>
   );

@@ -90,7 +90,7 @@ export default function NewEventPage() {
   return (
     <div>
       <PageHeader title="➕ New Event" subtitle="Create one or more events across a date range" />
-      <div className="p-8 max-w-4xl">
+      <div className="p-4 md:p-8 max-w-4xl">
         {error && <Alert type="error">{error}</Alert>}
         {success && <div className="mb-4"><Alert type="success">{success}</Alert></div>}
 
@@ -114,7 +114,7 @@ export default function NewEventPage() {
             {/* Event details */}
             <div>
               <h3 className="text-sm font-semibold text-slate-700 mb-3">Event Details</h3>
-              <div className="grid grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Select label="Type" value={form.type} onChange={(e) => set("type", e.target.value)} options={opts(lists.Types ?? [])} />
                 <Select label="Status" value={form.status} onChange={(e) => set("status", e.target.value)} options={opts(lists.Statuses ?? [])} />
                 <Select label="Source" value={form.source} onChange={(e) => set("source", e.target.value)} options={opts(lists.Sources ?? [])} />
@@ -134,7 +134,7 @@ export default function NewEventPage() {
                 value={form.trainers}
                 onChange={(v) => set("trainers", v)}
               />
-              <div className="grid grid-cols-3 gap-4 mt-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
                 <Select label="Medium" value={form.medium} onChange={(e) => set("medium", e.target.value)} options={opts(lists.Mediums ?? [])} />
                 <Select label="Location" value={form.location} onChange={(e) => set("location", e.target.value)} options={opts(lists.Locations ?? [])} />
                 <Select label="Invoiced" value={form.invoiced} onChange={(e) => set("invoiced", e.target.value)} options={opts(["No", "Yes"])} />

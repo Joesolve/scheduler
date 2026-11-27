@@ -55,9 +55,22 @@ export async function GET(req: NextRequest) {
   // SQLite LIKE is case-insensitive for ASCII by default
   if (client) where.client = { contains: client };
 
+  // Recent activity: only events added/modified since the given timestamp,
+  // newest change first.
+  const modifiedSince = searchParams.get("modifiedSince");
+  let orderBy: any = { date: "asc" };
+  if (modifiedSince) {
+    const since = new Date(modifiedSince);
+    if (isNaN(since.getTime())) {
+      return NextResponse.json({ error: "Invalid modifiedSince date." }, { status: 400 });
+    }
+    where.dateModified = { gte: since };
+    orderBy = { dateModified: "desc" };
+  }
+
   const events = await prisma.event.findMany({
     where,
-    orderBy: { date: "asc" },
+    orderBy,
   });
 
   return NextResponse.json({ events });

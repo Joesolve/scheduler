@@ -21,9 +21,24 @@ function opts(arr: string[]) {
   return arr.map((v) => ({ value: v, label: v }));
 }
 
+const RECENT_DAYS = 7;
+
+// Action types that mean "the event was added", not edited afterwards.
+const ADDED_ACTIONS = ["Created", "Imported", "Migrated", "Duplicated"];
+
+function wasModified(ev: Event): boolean {
+  return !!ev.actionType && !ADDED_ACTIONS.includes(ev.actionType);
+}
+
+function formatModified(ev: Event): string {
+  return ev.dateModified ? format(new Date(ev.dateModified), "dd/MM/yyyy HH:mm") : "—";
+}
+
 export default function ManageEventsPage() {
   const [settings, setSettings] = useState<Settings | null>(null);
   const [events, setEvents] = useState<Event[]>([]);
+  const [recentEvents, setRecentEvents] = useState<Event[]>([]);
+  const [recentLoading, setRecentLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -71,7 +86,29 @@ export default function ManageEventsPage() {
     }
   }, [filters, useDateRange]);
 
+  // Recent section ignores the filters below: always the last 7 days of
+  // added/modified events, newest change first.
+  const fetchRecent = useCallback(async () => {
+    setRecentLoading(true);
+    const since = new Date(Date.now() - RECENT_DAYS * 24 * 60 * 60 * 1000);
+    try {
+      const res = await fetch(`/api/events?${new URLSearchParams({ modifiedSince: since.toISOString() })}`);
+      const data = await res.json();
+      setRecentEvents(res.ok ? data.events ?? [] : []);
+    } catch {
+      setRecentEvents([]);
+    } finally {
+      setRecentLoading(false);
+    }
+  }, []);
+
   useEffect(() => { fetchEvents(); }, [fetchEvents]);
+  useEffect(() => { fetchRecent(); }, [fetchRecent]);
+
+  function refreshAll() {
+    fetchEvents();
+    fetchRecent();
+  }
 
   // Auto-clear success message after 3 seconds
   useEffect(() => {
@@ -107,7 +144,7 @@ export default function ManageEventsPage() {
     setSuccess(`Deleted ${ids.length} event(s).`);
     setDeleteConfirm(null);
     setSelected(new Set());
-    fetchEvents();
+    refreshAll();
   }
 
   if (!settings) return <div className="p-8 text-slate-500">Loading…</div>;
@@ -121,6 +158,62 @@ export default function ManageEventsPage() {
       <div className="p-4 md:p-8 space-y-4 md:space-y-6">
         {error && <Alert type="error">{error}</Alert>}
         {success && <Alert type="success">{success}</Alert>}
+
+        {/* Recent Events (last 7 days: added + modified) */}
+        <Card className="overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-800">🕒 Recent Events</h2>
+              <p className="text-xs text-slate-500">Added or modified in the last {RECENT_DAYS} days</p>
+            </div>
+            <Badge variant="blue">{recentEvents.length}</Badge>
+          </div>
+          <div className="overflow-x-auto max-h-80 overflow-y-auto">
+            <table className="w-full text-sm min-w-[640px]">
+              <thead className="bg-white border-b border-slate-200 sticky top-0">
+                <tr>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Changed</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Action</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Date</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Title</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Trainer</th>
+                  <th className="px-4 py-2 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">By</th>
+                  <th className="w-16 px-4 py-2"></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {recentLoading && (
+                  <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-400">Loading…</td></tr>
+                )}
+                {!recentLoading && recentEvents.length === 0 && (
+                  <tr><td colSpan={7} className="px-4 py-6 text-center text-slate-400">No events added or modified in the last {RECENT_DAYS} days.</td></tr>
+                )}
+                {recentEvents.map((ev) => (
+                  <tr key={ev.id} className="hover:bg-slate-50 transition-colors">
+                    <td className="px-4 py-2 text-slate-700 font-mono text-xs whitespace-nowrap">{formatModified(ev)}</td>
+                    <td className="px-4 py-2">
+                      <Badge variant={wasModified(ev) ? "orange" : "green"}>{wasModified(ev) ? "Modified" : "Added"}</Badge>
+                    </td>
+                    <td className="px-4 py-2 text-slate-700 font-mono text-xs whitespace-nowrap">{format(new Date(ev.date), "dd/MM/yyyy")}</td>
+                    <td className="px-4 py-2 text-slate-800 font-medium max-w-xs truncate">
+                      {ev.isMarked ? <span className="text-red-600">🚫 {ev.description}</span> : ev.title}
+                    </td>
+                    <td className="px-4 py-2 text-slate-600 text-xs">{ev.trainerCalendar}</td>
+                    <td className="px-4 py-2 text-slate-500 text-xs">{ev.modifiedBy ?? "—"}</td>
+                    <td className="px-4 py-2">
+                      {!ev.isMarked && (
+                        <button onClick={() => setEditEvent(ev)} className="text-xs text-brand-orange hover:underline">Edit</button>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </Card>
+
+        {/* All Events heading */}
+        <h2 className="text-sm font-semibold text-slate-800 pt-2">📋 All Events</h2>
 
         {/* Filters */}
         <Card className="p-4">
@@ -177,15 +270,16 @@ export default function ManageEventsPage() {
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Status</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Client</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Source</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wide">Last Modified</th>
                 <th className="w-20 px-4 py-3"></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {loading && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">Loading…</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">Loading…</td></tr>
               )}
               {!loading && events.length === 0 && (
-                <tr><td colSpan={8} className="px-4 py-8 text-center text-slate-400">No events found.</td></tr>
+                <tr><td colSpan={9} className="px-4 py-8 text-center text-slate-400">No events found.</td></tr>
               )}
               {events.map((ev) => (
                 <tr key={ev.id} className={`hover:bg-slate-50 transition-colors ${selected.has(ev.id) ? "bg-orange-50/50" : ""} ${ev.isMarked ? "bg-red-50/40" : ""}`}>
@@ -205,6 +299,9 @@ export default function ManageEventsPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-600 text-xs">{ev.client}</td>
                   <td className="px-4 py-3 text-slate-500 text-xs">{ev.source}</td>
+                  <td className="px-4 py-3 text-slate-600 font-mono text-xs whitespace-nowrap">
+                    {wasModified(ev) ? formatModified(ev) : <span className="text-slate-300">—</span>}
+                  </td>
                   <td className="px-4 py-3">
                     <button
                       onClick={() => { setSelected(new Set([ev.id])); setEditEvent(ev); }}
@@ -239,7 +336,7 @@ export default function ManageEventsPage() {
           event={editEvent}
           settings={settings}
           onClose={() => setEditEvent(null)}
-          onSaved={() => { setEditEvent(null); fetchEvents(); setSuccess("Event updated."); }}
+          onSaved={() => { setEditEvent(null); refreshAll(); setSuccess("Event updated."); }}
         />
       )}
 
@@ -249,7 +346,7 @@ export default function ManageEventsPage() {
         eventIds={Array.from(selected)}
         settings={settings}
         onClose={() => setBulkEditOpen(false)}
-        onSaved={() => { setBulkEditOpen(false); fetchEvents(); setSuccess(`${selected.size} event(s) updated.`); }}
+        onSaved={() => { setBulkEditOpen(false); refreshAll(); setSuccess(`${selected.size} event(s) updated.`); }}
       />
 
       {/* Duplicate Modal */}
@@ -257,7 +354,7 @@ export default function ManageEventsPage() {
         <DuplicateModal
           event={dupEvent}
           onClose={() => setDupEvent(null)}
-          onSaved={() => { setDupEvent(null); fetchEvents(); setSuccess("Event(s) duplicated."); }}
+          onSaved={() => { setDupEvent(null); refreshAll(); setSuccess("Event(s) duplicated."); }}
         />
       )}
 
